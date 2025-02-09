@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "-" : {
+
+    },
     "–" : {
       "shouldTranslate" : false
     },
@@ -91,7 +94,7 @@
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold knappen nede for at nulstille. Accepter notifikationer om du vil. "
+            "value" : "Hold knappen nede for at nulstille.\nAccepter notifikationer om du vil. "
           }
         }
       }

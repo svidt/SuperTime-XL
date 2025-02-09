@@ -34,11 +34,27 @@ struct TimerView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 
                 VStack(alignment: .center, spacing: geometry.size.height * 0.05) {
-
-                    HStack {
-                        Text("\(formatTimeSeconds(viewModel.currentTime))")
+                    HStack(alignment: .center) {
+                
+                        if viewModel.isCountingDown {
+                            Button { viewModel.currentTime -= 1000 } label: {
+                                Text("-")
+                                    .font(.custom("Stormfaze", size: geometry.size.width * 0.2))
+                            }
+                            .disabled(viewModel.currentTime == 0)
+                            .frame(width: geometry.size.width * 0.1, alignment: .center)
+                        }
+                            Text("\(formatTimeSeconds(viewModel.currentTime))")
                             .font(.custom("Stormfaze", size: geometry.size.width * 0.5))  // Set a consistent font size
-                            .frame(width: geometry.size.width * 0.9, alignment: .center)  // Fixed width for seconds
+                            .frame(width: geometry.size.width * 0.5, alignment: .center)  // Fixed width for seconds
+                       
+                        if viewModel.isCountingDown {
+                            Button { viewModel.currentTime += 1000 } label: {
+                                Text("+")
+                                    .font(.custom("Stormfaze", size: geometry.size.width * 0.2))
+                            }
+                        }
+                        
                     }
                     .frame(maxWidth: .infinity, maxHeight: geometry.size.height * 0.75, alignment: .center)
                     

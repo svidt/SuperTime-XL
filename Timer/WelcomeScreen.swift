@@ -16,6 +16,7 @@ struct WelcomeScreen: View {
     @State private var viewAppears: Bool = false
     @State private var buttonSize: Double = 1.0
     @State private var buttonColor: Color = .orange
+    @State private var overlaySize: Double = 0.0
     
     var body: some View {
         GeometryReader { geometry in
@@ -41,6 +42,14 @@ struct WelcomeScreen: View {
                         
                         RoundedRectangle(cornerRadius: 25)
                             .fill(buttonColor)
+                            .overlay {
+                                Circle()
+                                    .foregroundStyle(.white.opacity(0.2))
+                                    .allowsHitTesting(false)
+                                    .scaleEffect(overlaySize, anchor: .center)
+                                
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 25))
                             .padding()
                         VStack(spacing: geometry.size.height * 0.01) {
                             Text("Continue")
@@ -51,11 +60,12 @@ struct WelcomeScreen: View {
                         }
                         .frame(width: geometry.size.width * 0.8, height: geometry.size.height * 0.2)
                         .foregroundStyle(.black)
+
                         
                     }
                     .frame(width: geometry.size.width, height: viewAppears ? geometry.size.height * 0.3 : geometry.size.height * 0.6)
                     .scaleEffect(buttonSize)
-                    .onLongPressGesture(minimumDuration: 1.0, perform: {
+                    .onLongPressGesture(minimumDuration: 0.5, perform: {
                         aboutToShowWelcomeScreen = false
                         viewModel.requestNotificationPermissions()
                         dismiss()
@@ -67,10 +77,21 @@ struct WelcomeScreen: View {
                                 buttonColor = .yellow
                                 buttonSize = 0.9
                             }
+                            
+                            // Overlay Animation
+                            withAnimation(.easeIn(duration: 0.6)) {
+                                overlaySize += 3.0
+                            }
+                            
                         } else {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 buttonColor = .orange
                                 buttonSize = 1.0
+                            }
+                            
+                            // Overlay Animation
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                overlaySize = 0.0
                             }
                         }
                     }
