@@ -79,7 +79,7 @@ struct WelcomeScreen: View {
                             }
                             
                             // Overlay Animation
-                            withAnimation(.easeIn(duration: 0.6)) {
+                            withAnimation(.easeIn(duration: 0.5)) {
                                 overlaySize += 3.0
                             }
                             

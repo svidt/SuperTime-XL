@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ControlView: View {
+//    @StateObject var viewModel = TimerViewModel()
     @ObservedObject var viewModel: TimerViewModel
     
     @State private var countdownInput = 0  // Default countdown value in seconds
@@ -20,9 +21,10 @@ struct ControlView: View {
                 // Reset Timer
                 Button(action: {
                     if viewModel.currentTime == 0 {
-                        countdownInput += 60
+                        countdownInput += 60_000
+                        
                         let countdownSeconds = countdownInput
-                        viewModel.toggleMode(isCountdown: true, countdownFrom: countdownSeconds * 1000)
+                        viewModel.toggleMode(isCountdown: true, countdownFrom: countdownSeconds)
                         
                         // Ask permission to display notificaions
                         viewModel.requestNotificationPermissions()
@@ -45,26 +47,27 @@ struct ControlView: View {
                     
                     // Minus 1 minute
                     Button(action: {
-                        countdownInput -= 60
-                        let countdownSeconds = countdownInput
-                        viewModel.toggleMode(isCountdown: true, countdownFrom: countdownSeconds * 1000)
-                        if countdownInput <= 1 {
+//                        countdownInput -= 60_000
+                        
+//                        let countdownSeconds = countdownInput
+                        viewModel.toggleMode(isCountdown: true, countdownFrom: viewModel.currentTime - 60_000)
+                        if viewModel.currentTime <= 60 {
                             countdownInput = 0
-                            viewModel.toggleMode(isCountdown: false, countdownFrom: countdownInput)
+                            viewModel.toggleMode(isCountdown: false, countdownFrom: 60)
                             viewModel.resetTime()
                         }
                     }) {
                         Text("–")
                     }
                     .buttonRepeatBehavior(.enabled)
-                    .opacity(countdownInput <= 0 ? 0.5 : 1.0)
-                    .disabled(countdownInput <= 0)
+                    .opacity(viewModel.currentTime == 0 ? 0.5 : 1.0)
+                    .disabled(viewModel.currentTime == 0)
                     
                     Button(action: {
 
                         if viewModel.currentTime == 0 {
                             let countdownSeconds = countdownInput
-                            viewModel.toggleMode(isCountdown: true, countdownFrom: countdownSeconds * 1000)
+                            viewModel.toggleMode(isCountdown: true, countdownFrom: countdownSeconds)
                             
                         } else {
                             viewModel.toggleMode(isCountdown: false, countdownFrom: countdownInput)
@@ -75,14 +78,16 @@ struct ControlView: View {
                             .rotationEffect(Angle(degrees: viewModel.isCountingDown ? 180.0 : 0))
                             .animation(.bouncy(duration: 0.3), value: viewModel.isCountingDown)
                     }
-                    .opacity(countdownInput <= 0 ? 0.5 : 1.0)
-                    .disabled(countdownInput <= 0)
+                    .opacity(viewModel.currentTime == 0 ? 0.5 : 1.0)
+                    .disabled(viewModel.currentTime == 0)
                     
                     // Add 1 minute
                     Button(action: {
-                        countdownInput += 60
-                        let countdownSeconds = countdownInput
-                        viewModel.toggleMode(isCountdown: true, countdownFrom: countdownSeconds * 1000)
+//                        viewModel.adjustTime(by: 60000)
+//                        countdownInput += 60_000
+                        
+//                        let countdownSeconds = countdownInput
+                        viewModel.toggleMode(isCountdown: true, countdownFrom: viewModel.currentTime + 60_000)
                         
                         // Ask permission to display notificaions
                         viewModel.requestNotificationPermissions()
@@ -91,7 +96,7 @@ struct ControlView: View {
                         Text("+")
                     }
                     .buttonRepeatBehavior(.enabled)
-                    .disabled(countdownInput >= 3600)
+//                    .disabled(countdownInput >= 1000)
                 }
                 .font(.largeTitle).bold()
                 

@@ -34,25 +34,40 @@ struct TimerView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 
                 VStack(alignment: .center, spacing: geometry.size.height * 0.05) {
+    // MARK: test
+//                    Text(viewModel.currentTimeAsString())
                     HStack(alignment: .center) {
-                
-                        if viewModel.isCountingDown {
-                            Button { viewModel.currentTime -= 1000 } label: {
-                                Text("-")
-                                    .font(.custom("Stormfaze", size: geometry.size.width * 0.2))
+                        
+                        if viewModel.isCountingDown && !viewModel.isRunning {
+                        VStack {
+                                Button {
+                                    viewModel.adjustTime(by: -1000)
+                                } label: {
+                                    Text("–")
+                                        .font(.custom("Stormfaze", size: geometry.size.width * 0.1))
+                                }
+                                .buttonRepeatBehavior(.enabled)
+                                .disabled(viewModel.currentTime == 0)
+                                .frame(width: geometry.size.width * 0.1, alignment: .center)
                             }
-                            .disabled(viewModel.currentTime == 0)
-                            .frame(width: geometry.size.width * 0.1, alignment: .center)
                         }
                             Text("\(formatTimeSeconds(viewModel.currentTime))")
                             .font(.custom("Stormfaze", size: geometry.size.width * 0.5))  // Set a consistent font size
-                            .frame(width: geometry.size.width * 0.5, alignment: .center)  // Fixed width for seconds
-                       
-                        if viewModel.isCountingDown {
-                            Button { viewModel.currentTime += 1000 } label: {
-                                Text("+")
-                                    .font(.custom("Stormfaze", size: geometry.size.width * 0.2))
+                            .frame(width: geometry.size.width * 0.6, alignment: .center)  // Fixed width for seconds
+                        
+                        if viewModel.isCountingDown && !viewModel.isRunning {
+                        VStack {
+                                Button {
+                                    viewModel.adjustTime(by: 1000)
+                                    //                                viewModel.countdownTime += 1000
+                                    //                                viewModel.currentTime += 1000
+                                } label: {
+                                    Text("+")
+                                        .font(.custom("Stormfaze", size: geometry.size.width * 0.1))
+                                }
+                                .buttonRepeatBehavior(.enabled)
                             }
+                        .frame(width: geometry.size.width * 0.1, alignment: .center)
                         }
                         
                     }
@@ -68,7 +83,7 @@ struct TimerView: View {
                         
                         
                         // Millisecond Text - Fixed width to avoid shifting
-                        Text("\(formatTimeMilliseconds(viewModel.currentTime)) ms")
+                        Text("\(formatTimeMilliseconds(viewModel.currentTime)).") // ds is decisecond ( 1 / tenth of a second
                             .font(.custom("Stormfaze", size: geometry.size.width * 0.08))
                             .frame(width: geometry.size.width * 0.44, alignment: .trailing)  // Fixed width for milliseconds
                     }
@@ -98,8 +113,8 @@ struct TimerView: View {
     }
     
     private func formatTimeMilliseconds(_ time: Int) -> String {
-        let milliseconds = time % 1000  // Show full milliseconds (000-999)
-        return String(format: "%03d", milliseconds)
+        let milliseconds = time % 1000 / 100  // Show full milliseconds (000-999)
+        return String(format: "%01d", milliseconds)
     }
 }
 

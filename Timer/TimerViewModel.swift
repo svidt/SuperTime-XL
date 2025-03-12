@@ -51,10 +51,21 @@ class TimerViewModel: ObservableObject {
     // Switch between stopwatch and countdown mode
     func toggleMode(isCountdown: Bool, countdownFrom milliseconds: Int? = nil) {
         isCountingDown = isCountdown
+
         if isCountingDown, let countdown = milliseconds {
-            countdownTime = countdown
-            currentTime = countdown  // Set the starting time for countdown
+            print("Debug 1: Adding \(countdown) milliseconds to countdown time")
+            countdownTime = countdown // Add time instead of resetting it
+            print("Debug 2: countdownTime is now \(countdownTime)")
+            currentTime = countdown // Add time to the current timer value
+            print("Debug 3: currentTime is now \(currentTime)")
+        } else {
+            // In stopwatch mode, reset countdownTime but keep currentTime running
+            countdownTime = 0
         }
+
+        // Ensure Live Activity updates immediately
+        updateLiveActivity()
+
         // Resume or start the timer in the new mode
         provideHapticFeedback(for: .change)
     }
@@ -68,6 +79,7 @@ class TimerViewModel: ObservableObject {
             displayLink?.add(to: .main, forMode: .common)
             isRunning = true
             isPaused = false
+            print("Current Time 1: \(currentTime)")
             
             provideHapticFeedback(for: .startStop)
             UIApplication.shared.isIdleTimerDisabled = true // Prevent screen from locking
@@ -86,9 +98,12 @@ class TimerViewModel: ObservableObject {
                 scheduleNotification()
                 
                 // Update widget with RUNNING
-                let currentTime = currentTimeAsString()  // Assuming you have a method to format current time as string
-                updateTimerData(timerValue: currentTime, timerState: "running", timerMode: currentMode())
+                let currentTimeFormatted = currentTimeAsString()  // Assuming you have a method to format current time as string
+                updateTimerData(timerValue: currentTimeFormatted, timerState: "running", timerMode: currentMode())
+                print("-->\(currentTimeFormatted)")
+                print("-->\(currentTime)")
                 
+                print("🏁 Current Time Formattet: \(currentTimeFormatted)")
             }
         }
     }
@@ -125,6 +140,7 @@ class TimerViewModel: ObservableObject {
     func resetTime() {
         if currentTime != 0 {
             provideHapticFeedback(for: .reset)
+            print("🏁 Current Time After Reset: \(currentTime)")
         }
 
         stopTimer()
@@ -147,6 +163,7 @@ class TimerViewModel: ObservableObject {
     
     // MARK: - Time Update
     @objc private func updateTime() {
+        
         guard let startTime = startTime else { return }
         let elapsed = Date().timeIntervalSince(startTime) * 1000  // Elapsed time in ms
    
@@ -154,7 +171,6 @@ class TimerViewModel: ObservableObject {
             updateCountdownTimer(elapsed: elapsed)
         } else {
             currentTime = Int(elapsed)  // Count up in stopwatch mode
-//            print("Stopwatch running: current time \(currentTimeAsString())")
         }
         
         // Ensure that we do not keep running if timer is stopped
@@ -165,27 +181,28 @@ class TimerViewModel: ObservableObject {
     }
     
     private func updateCountdownTimer(elapsed: TimeInterval) {
-        let remainingTime = countdownTime - Int(elapsed)
+        let remainingTime = max(0, countdownTime - Int(elapsed))
+
+        currentTime = remainingTime
         if remainingTime > 0 {
-            currentTime = remainingTime
-//            print("Countdown running: remaining time \(currentTimeAsString())")
+            updateLiveActivity()  // Ensure Live Activity updates
         } else {
-            currentTime = 0  // Ensure we explicitly set currentTime to 0
             print("Countdown reached zero. Stopping timer.")
             
-            stopTimer()  // Call stopTimer to handle timer stopping logic
-            endLiveActivity()  // Ensure live activity is stopped
-            stopLiveActivityTimer()  // Stop live activity timer
+            stopTimer()
+            endLiveActivity()
+            stopLiveActivityTimer()
             
             UIApplication.shared.isIdleTimerDisabled = false
             print("Screen: OFF")
             playAlarm()
             print("Countdown reached zero, triggering alarm.")
-        
-            // Additional: Update the widget to reflect the stopped state
+
             let currentTimeFormatted = currentTimeAsString()
             print("Timer stopped, time zeroed: \(currentTimeFormatted)")
             updateTimerData(timerValue: currentTimeFormatted, timerState: "stopped", timerMode: currentMode())
+            
+            updateLiveActivity()  // 🔥 Ensure UI updates even when time is 0!
         }
     }
     
@@ -280,6 +297,7 @@ class TimerViewModel: ObservableObject {
             guard let self = self else { return }
             
             let secondsElapsed = self.currentTime / 1000  // Convert to seconds
+
             if secondsElapsed != self.lastSecondUpdated {
                 self.lastSecondUpdated = secondsElapsed
                 DispatchQueue.main.async {
@@ -305,11 +323,10 @@ class TimerViewModel: ObservableObject {
         guard let currentActivity = currentActivity else { return }
 
         let currentTimestamp = Date().timeIntervalSince1970  // Get current time in seconds
-
         // Determine if one second has passed since last update
         if currentTimestamp - lastUpdateTimestamp >= 1 {
             lastUpdateTimestamp = currentTimestamp  // Update the last update timestamp
-            
+
             if isCountingDown {
                 // Countdown mode updates
                 let remainingSeconds = currentTime / 1000
@@ -320,7 +337,6 @@ class TimerViewModel: ObservableObject {
                 )
 
                 let updatedContent = ActivityContent(state: updatedState, staleDate: nil)
-
                 print("Updating countdown live activity. Time left (s): \(remainingSeconds)")
 
                 Task {
@@ -442,19 +458,48 @@ class TimerViewModel: ObservableObject {
         print("Widget Updated: \(timerState)")
     }
     
+    private var lastFormattedTime: (time: Int, string: String)?
+
     func currentTimeAsString() -> String {
-        // Assuming `currentTime` is the variable that holds the timer's current time in milliseconds
+        if let cached = lastFormattedTime, cached.time == currentTime {
+            return cached.string
+        }
         let seconds = currentTime / 1000
         let minutes = seconds / 60
         let hours = minutes / 60
-
         let formattedTime = String(format: "%02d:%02d:%02d", hours, minutes % 60, seconds % 60)
+        lastFormattedTime = (currentTime, formattedTime)
         return formattedTime
     }
     
     func currentMode() -> String {
         return isCountingDown ? "timer" : "stopwatch"
     }
+    
+    
+    func adjustTime(by milliseconds: Int) {
+        if isCountingDown {
+            // Don't allow negative time
+            if milliseconds < 0 && currentTime < abs(milliseconds) {
+                return
+            }
+            countdownTime += milliseconds
+            currentTime += milliseconds            
+            
+            // If the timer is running, we need to adjust the start time
+            if isRunning {
+                startTime = Date().addingTimeInterval(-TimeInterval(countdownTime - currentTime) / 1000)
+            }
+            
+            // Update live activity if needed
+            updateLiveActivity()
+            
+            // Update widget
+            let currentTimeFormatted = currentTimeAsString()
+            updateTimerData(timerValue: currentTimeFormatted, timerState: "running", timerMode: currentMode())
+        }
+    }
+    
 }
 
 enum HapticAction {

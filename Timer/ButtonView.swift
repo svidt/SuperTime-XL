@@ -110,7 +110,7 @@ struct ButtonView: View {
                                 print("Pressing!")
                             }
                                 // Overlay Animation
-                                withAnimation(.easeIn(duration: 0.6)) {
+                                withAnimation(.easeIn(duration: 0.5)) {
                                     overlaySize += 3.0
                                 }
                         } else {
@@ -118,7 +118,7 @@ struct ButtonView: View {
                                 buttonColor = .yellow
                                 buttonSize = 1.0
                                 overlaySize -= 2.0
-                                print("Not pressing.")
+                                print("Releasing!")
                             }
                             // Overlay Animation
                             withAnimation(.easeOut(duration: 0.3)) {

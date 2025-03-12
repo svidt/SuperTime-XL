@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "-" : {
-
-    },
     "–" : {
       "shouldTranslate" : false
     },
@@ -13,8 +10,8 @@
     "%@ m" : {
       "shouldTranslate" : false
     },
-    "%@ ms" : {
-      "shouldTranslate" : false
+    "%@." : {
+
     },
     "+" : {
       "shouldTranslate" : false
